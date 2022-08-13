@@ -2,6 +2,9 @@ package uz.jl.springbootfeatures;
 
 import com.github.javafaker.Faker;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.ehcache.event.CacheEvent;
+import org.ehcache.event.CacheEventListener;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,11 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -45,22 +44,6 @@ public class SpringBootFeaturesApplication {
 }
 
 
-@Entity
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-class Book {
-    @Id
-    @Builder.Default
-    private String id = UUID.randomUUID().toString();
-    private String name;
-    private String author;
-    private String genre;
-    private LocalDateTime createdAt;
-}
-
-
 @Service
 @RequiredArgsConstructor
 class BookService {
@@ -84,7 +67,7 @@ class BookService {
         bookRepository.deleteById(id);
     }
 
-    @CachePut(cacheNames = "book",key = "#dto.id")
+    @CachePut(cacheNames = "book", key = "#dto.id")
     public Book update(BookUpdateDTO dto) {
         Book book = getOne(dto.getId());
         if (dto.getName() != null)
@@ -134,8 +117,8 @@ class BookController {
 
     @PutMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void update(@RequestBody BookUpdateDTO dto) {
-        bookService.update(dto);
+    public Book update(@RequestBody BookUpdateDTO dto) {
+        return bookService.update(dto);
     }
 
     @DeleteMapping("/{id}")
@@ -156,3 +139,5 @@ class BookUpdateDTO {
     private String author;
     private String genre;
 }
+
+
