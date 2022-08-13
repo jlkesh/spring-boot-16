@@ -1,7 +1,18 @@
 package uz.jl.springbootfeatures;
 
 import com.github.javafaker.Faker;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.*;
+import org.springdoc.api.annotations.ParameterObject;
+import org.springdoc.core.annotations.RouterOperation;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,6 +35,7 @@ import java.util.stream.IntStream;
 
 @SpringBootApplication
 @EnableCaching
+@OpenAPIDefinition
 public class SpringBootFeaturesApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootFeaturesApplication.class, args);
@@ -84,7 +96,7 @@ class BookService {
         bookRepository.deleteById(id);
     }
 
-    @CachePut(cacheNames = "book",key = "#dto.id")
+    @CachePut(cacheNames = "book", key = "#dto.id")
     public Book update(BookUpdateDTO dto) {
         Book book = getOne(dto.getId());
         if (dto.getName() != null)
@@ -110,17 +122,41 @@ interface BookRepository extends JpaRepository<Book, String> {
 @RestController
 @RequestMapping("/book")
 @RequiredArgsConstructor
+@Tag(name = "Book Controller", description = "All book operations will be done by this controller")
 class BookController {
 
     private final BookService bookService;
 
     @GetMapping
+    @Operation(summary = "Get a book by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Found the book",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Book.class))}),
+            @ApiResponse(responseCode = "400", description = "Invalid id supplied",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Book not found",
+                    content = @Content)})
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> books() {
+    public List<Book> books(@ParameterObject BookCriteria bookCriteria) {
         return bookService.getAll();
     }
 
     @PostMapping
+    @RouterOperation(
+            operation = @Operation(operationId = "create a book",
+                    summary = "This api for creating book",
+                    tags = {
+                            "Create a book"
+                    },
+                    parameters = {
+                            @Parameter(in = ParameterIn.PATH, name = "dto", description = "BookCreateDTO")
+                    },
+                    responses = {
+                            @ApiResponse(responseCode = "400", description = "Bad request"),
+                            @ApiResponse(responseCode = "201", description = "Created"),
+                            @ApiResponse(responseCode = "404", description = "Path not found")
+                    }))
     @ResponseStatus(HttpStatus.CREATED)
     public void create(@RequestBody Book book) {
         bookService.create(book);
@@ -155,4 +191,20 @@ class BookUpdateDTO {
     private String name;
     private String author;
     private String genre;
+}
+
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+class BookCriteria {
+    private boolean deleted;
+    private String name;
+    private String author;
+    private Genre genre;
+
+    public static enum Genre {
+        ROMANCE, DRAMA, SCI_FI
+    }
 }
