@@ -145,3 +145,4 @@ fabric.properties
 /.mvn/wrapper/maven-wrapper.properties
 /mvnw
 /mvnw.cmd
+/db.mv.db
