@@ -1,0 +1,40 @@
+#application:
+#  name: Hello from default config
+#spring:
+#  profiles:
+#    active: test
+#
+#---
+#spring:
+#  config:
+#    activate:
+#      on-profile: prod
+#application:
+#  name: Hello from prod config
+#
+#---
+#spring:
+#  config:
+#    activate:
+#      on-profile: dev
+#application:
+#  name: Hello from dev config
+#
+#
+#---
+#spring:
+#  config:
+#    activate:
+#      on-profile: test
+#application:
+#  name: Hello from test config
+#
+#app:
+#  jobs:
+#    - id: 1
+#      title: Software engineer
+#      description: Does some kinna *** things
+#    - id: 2
+#      title: Mentor
+#      description: Teaches about special subject
+#
