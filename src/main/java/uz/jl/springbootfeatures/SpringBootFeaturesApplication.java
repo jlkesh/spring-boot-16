@@ -10,16 +10,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import lombok.*;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -41,6 +40,9 @@ import java.util.stream.IntStream;
 
 @SpringBootApplication
 @EnableCaching
+@EnableConfigurationProperties({
+        OpenApiConfigurer.class
+})
 public class SpringBootFeaturesApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootFeaturesApplication.class, args);
@@ -214,33 +216,62 @@ class BookCriteria {
     }
 }
 
+
 @Configuration
+@ConfigurationProperties(prefix = "api.documentation")
 @OpenAPIDefinition
+@Data
 class OpenApiConfigurer {
+
+    private Info info;
+    private Licence licence;
+    private External external;
 
     @Bean
     public OpenAPI springShopOpenAPI() {
         return new OpenAPI().info(getInfo().license(licence())).externalDocs(externalDocumentation());
     }
 
-    private Info getInfo() {
-        return new Info()
-                .title("Simple OpenApi Configuration API")
-                .description("Simple OpenApi Configuration API for testing")
-                .version("v-1");
+    private io.swagger.v3.oas.models.info.Info getInfo() {
+        return new io.swagger.v3.oas.models.info.Info()
+                .title(info.getTitle())
+                .description(info.getDescription())
+                .version(info.getVersion());
     }
 
-    private License licence() {
-        return new License()
-                .name("Apache 2.0")
-                .url("http://springdoc.org");
+    private io.swagger.v3.oas.models.info.License licence() {
+        return new io.swagger.v3.oas.models.info.License()
+                .name(licence.getName())
+                .url(licence.getUrl());
     }
 
-    private ExternalDocumentation externalDocumentation() {
-        return new ExternalDocumentation()
-                .description("SpringShop Wiki Documentation")
-                .url("https://springshop.wiki.github.org/docs");
+    private io.swagger.v3.oas.models.ExternalDocumentation externalDocumentation() {
+        return new io.swagger.v3.oas.models.ExternalDocumentation()
+                .description(external.getDescription())
+                .url(external.getUrl());
     }
 
+    @Getter
+    @Setter
+    public static class Info {
+        private String title;
+        private String description;
+        private String version;
+    }
+
+    @Getter
+    @Setter
+    public static class Licence {
+        private String name;
+        private String url;
+
+    }
+
+    @Getter
+    @Setter
+    public static class External {
+        private String description;
+        private String url;
+    }
 
 }
