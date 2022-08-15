@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./db
+    driverClassName: org.h2.Driver
+    username: root
+    password: root
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.format_sql: true
+    defer-datasource-initialization: true
+
+springdoc:
+  swagger-ui.path: /swagger
+  api-docs.path: /docs
+  #
+  # docs
+  #
+api.documentation:
+  info:
+    title: Spring open api dome
+    description: Spring boot application for openapi testing
+    version: v-1
+
+  licence:
+    name: Apache 2.0
+    url: https://apache.org
+  external:
+    url: https://springdoc.org
+    description: Springdocs documentation
