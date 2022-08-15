@@ -146,3 +146,6 @@ fabric.properties
 /mvnw
 /mvnw.cmd
 /db.mv.db
+/spring-boot-ehcache/cache/file/book_e7e694c58cd50e0324ec96918800bc35cd17629b/offheap-disk-store/ehcache-disk-store.data
+/spring-boot-ehcache/cache/file/book_e7e694c58cd50e0324ec96918800bc35cd17629b/offheap-disk-store/ehcache-disk-store.index
+/spring-boot-ehcache/cache/file/book_e7e694c58cd50e0324ec96918800bc35cd17629b/offheap-disk-store/ehcache-disk-store.meta

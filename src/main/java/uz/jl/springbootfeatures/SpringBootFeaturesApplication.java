@@ -10,6 +10,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.models.ExternalDocumentation;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import lombok.*;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springdoc.core.annotations.RouterOperation;
@@ -20,6 +24,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,7 +41,6 @@ import java.util.stream.IntStream;
 
 @SpringBootApplication
 @EnableCaching
-@OpenAPIDefinition
 public class SpringBootFeaturesApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootFeaturesApplication.class, args);
@@ -207,4 +212,35 @@ class BookCriteria {
     public static enum Genre {
         ROMANCE, DRAMA, SCI_FI
     }
+}
+
+@Configuration
+@OpenAPIDefinition
+class OpenApiConfigurer {
+
+    @Bean
+    public OpenAPI springShopOpenAPI() {
+        return new OpenAPI().info(getInfo().license(licence())).externalDocs(externalDocumentation());
+    }
+
+    private Info getInfo() {
+        return new Info()
+                .title("Simple OpenApi Configuration API")
+                .description("Simple OpenApi Configuration API for testing")
+                .version("v-1");
+    }
+
+    private License licence() {
+        return new License()
+                .name("Apache 2.0")
+                .url("http://springdoc.org");
+    }
+
+    private ExternalDocumentation externalDocumentation() {
+        return new ExternalDocumentation()
+                .description("SpringShop Wiki Documentation")
+                .url("https://springshop.wiki.github.org/docs");
+    }
+
+
 }
