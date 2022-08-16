@@ -2,6 +2,7 @@ package uz.jl.springbootfeatures.utils;
 
 import io.jsonwebtoken.*;
 import org.apache.logging.log4j.util.Supplier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import uz.jl.springbootfeatures.configs.security.UserDetails;
@@ -17,26 +18,26 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
-    private final String jwtSecret = "secret-123ntTimeMillisntTimeMillis";
+    @Value("${security.jwt.secret}")
+    private String jwtSecret;
+
+
+    @Value("${security.jwt.expiry.in.seconds}")
+    private int jwtExpiration;
 
     public static final Supplier<SignatureAlgorithm> algorithm = () -> SignatureAlgorithm.HS512;
 
-    private final int jwtExpirationMs = 120_000;
 
-    public String generateJwtToken(Authentication authentication) {
-        return generateJwtToken((UserDetails) authentication.getPrincipal());
+    public String generateJwtAccessToken(Authentication authentication) {
+        return generateJwtAccessToken((UserDetails) authentication.getPrincipal());
     }
 
-    public String generateJwtToken(UserDetails userDetails) {
-        return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(algorithm.get(), jwtSecret)
-                .setIssuer("path")
-                .setHeaderParam("typ", "JWT")
+    public String generateJwtAccessToken(UserDetails userDetails) {
+        return getJwtBuilder(userDetails)
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000L))
                 .compact();
     }
+
 
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
@@ -45,6 +46,13 @@ public class JwtUtils {
                 .getBody()
                 .getSubject();
     }
+
+    public String generateJwtRefreshToken(UserDetails userDetails) {
+        return getJwtBuilder(userDetails)
+                .setExpiration(new Date(System.currentTimeMillis() + 10 * 86_400_000))
+                .compact();
+    }
+
 
     public boolean validateJwtToken(String authToken) {
         try {
@@ -62,6 +70,13 @@ public class JwtUtils {
             System.err.println(("JWT claims string is empty: {}" + e.getMessage()));
         }
         return false;
+    }
+
+    private JwtBuilder getJwtBuilder(UserDetails userDetails) {
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date())
+                .signWith(algorithm.get(), jwtSecret);
     }
 
 }

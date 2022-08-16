@@ -25,6 +25,11 @@ public class AuthController {
         return ResponseEntity.ok(authUserService.login(request));
     }
 
+    @PostMapping("/refresh/token")
+    public ResponseEntity<JwtResponse> refreshToken(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authUserService.refreshToken(request));
+    }
+
     @GetMapping("/test")
     public boolean test() {
         return true;

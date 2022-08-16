@@ -7,5 +7,5 @@ package uz.jl.springbootfeatures.dto.auth.response;
  */
 
 
-public record JwtResponse(String accessToken, String tokenType) {
+public record JwtResponse(String accessToken, String refreshToken, String tokenType) {
 }

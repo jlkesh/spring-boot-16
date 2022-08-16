@@ -41,7 +41,12 @@ public class AuthUserService implements UserDetailsService {
         if (!passwordEncoder.matches(request.password(), userDetails.getPassword())) {
             throw new BadCredentialsException("Bad credentials");
         }
-        String jwtToken = jwtUtils.generateJwtToken(userDetails);
-        return new JwtResponse(jwtToken, "Bearer");
+        String accessToken = jwtUtils.generateJwtAccessToken(userDetails);
+        String refreshToken = jwtUtils.generateJwtRefreshToken(userDetails);
+        return new JwtResponse(accessToken, refreshToken, "Bearer");
+    }
+
+    public JwtResponse refreshToken(LoginRequest request) {
+        return null;
     }
 }

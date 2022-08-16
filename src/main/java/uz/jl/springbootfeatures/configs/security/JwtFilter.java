@@ -13,6 +13,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * @author "Elmurodov Javohir"
@@ -30,11 +32,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (!request.getRequestURI().equals("/access/token")) {
+        if (secureUrl.apply(request.getRequestURI())) {
             try {
-                String jwt = parseJwt(request);
-                if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                String token = parseJwt(request);
+                if (jwtUtils.validateJwtToken(token)) {
+                    String username = jwtUtils.getUserNameFromJwtToken(token);
                     UserDetails userDetails = authUserService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
@@ -48,6 +50,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
+
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
@@ -55,4 +58,8 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
+    private final static Function<String, Boolean> secureUrl = (path) ->
+            !List.of("/access/token", "/refresh/token").contains(path);
+
 }
