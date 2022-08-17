@@ -1,5 +1,6 @@
 package uz.jl.springbootfeatures.configs.security;
 
+import org.springframework.lang.NonNullApi;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -35,7 +36,7 @@ public class JwtFilter extends OncePerRequestFilter {
         if (secureUrl.apply(request.getRequestURI())) {
             try {
                 String token = parseJwt(request);
-                if (jwtUtils.validateJwtToken(token)) {
+                if (jwtUtils.validateJwtToken(token, JwtUtils.algorithmForAccessToken.get())) {
                     String username = jwtUtils.getUserNameFromJwtToken(token);
                     UserDetails userDetails = authUserService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

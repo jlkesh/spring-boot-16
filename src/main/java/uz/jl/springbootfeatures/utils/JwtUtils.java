@@ -1,12 +1,16 @@
 package uz.jl.springbootfeatures.utils;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import lombok.NonNull;
 import org.apache.logging.log4j.util.Supplier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import uz.jl.springbootfeatures.configs.security.UserDetails;
 
+import javax.crypto.SecretKey;
+import java.security.Key;
 import java.util.Date;
 
 /**
@@ -22,10 +26,11 @@ public class JwtUtils {
     private String jwtSecret;
 
 
-    @Value("${security.jwt.expiry.in.seconds}")
+    @Value("${security.jwt.expiry.in.milseconds}")
     private int jwtExpiration;
 
-    public static final Supplier<SignatureAlgorithm> algorithm = () -> SignatureAlgorithm.HS512;
+    public static final Supplier<SignatureAlgorithm> algorithmForRefreshToken = () -> SignatureAlgorithm.ES256;
+    public static final Supplier<SignatureAlgorithm> algorithmForAccessToken = () -> SignatureAlgorithm.HS512;
 
 
     public String generateJwtAccessToken(Authentication authentication) {
@@ -33,8 +38,8 @@ public class JwtUtils {
     }
 
     public String generateJwtAccessToken(UserDetails userDetails) {
-        return getJwtBuilder(userDetails)
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000L))
+        return getJwtBuilder(userDetails.getUsername(), algorithmForAccessToken.get())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .compact();
     }
 
@@ -48,23 +53,24 @@ public class JwtUtils {
     }
 
     public String generateJwtRefreshToken(UserDetails userDetails) {
-        return getJwtBuilder(userDetails)
+        return getJwtBuilder(userDetails.getUsername(), algorithmForRefreshToken.get())
                 .setExpiration(new Date(System.currentTimeMillis() + 10 * 86_400_000))
                 .compact();
     }
 
     public String generateJwtRefreshToken(Authentication authentication) {
-        return getJwtBuilder((UserDetails) authentication.getPrincipal())
-                .setExpiration(new Date(System.currentTimeMillis() + 10 * 86_400_000))
-                .compact();
+        return generateJwtRefreshToken((UserDetails) authentication.getPrincipal());
     }
 
 
-    public boolean validateJwtToken(String authToken) {
+    public boolean validateJwtToken(String authToken, SignatureAlgorithm algorithm) {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+            Jwts.parserBuilder()
+                    .setSigningKey(hmacKey)
+                    .build()
+                    .parseClaimsJws(authToken);
             return true;
-        } catch (SignatureException e) {
+        } catch (SecurityException e) {
             System.err.println(("Invalid JWT signature: {}" + e.getMessage()));
         } catch (MalformedJwtException e) {
             System.err.println(("Invalid JWT token: {}" + e.getMessage()));
@@ -78,11 +84,15 @@ public class JwtUtils {
         return false;
     }
 
-    private JwtBuilder getJwtBuilder(UserDetails userDetails) {
+    private JwtBuilder getJwtBuilder(@NonNull final String subject, @NonNull final SignatureAlgorithm algorithm) {
+
+        SecretKey secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        System.out.println("===========================" + secretKey);
+
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(subject)
                 .setIssuedAt(new Date())
-                .signWith(algorithm.get(), jwtSecret);
+                .signWith(secretKey);
     }
 
 }
