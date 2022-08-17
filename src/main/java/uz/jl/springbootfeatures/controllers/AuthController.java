@@ -2,10 +2,7 @@ package uz.jl.springbootfeatures.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import uz.jl.springbootfeatures.dto.auth.request.LoginRequest;
 import uz.jl.springbootfeatures.dto.auth.response.JwtResponse;
 import uz.jl.springbootfeatures.services.auth.AuthUserService;
@@ -17,6 +14,7 @@ import uz.jl.springbootfeatures.services.auth.AuthUserService;
  */
 @RestController
 @RequiredArgsConstructor
+//@CrossOrigin(origins = {"http://kun.uz", "http://qalampir.uz"})
 public class AuthController {
     private final AuthUserService authUserService;
 
