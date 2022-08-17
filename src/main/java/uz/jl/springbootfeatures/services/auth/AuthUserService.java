@@ -1,5 +1,6 @@
 package uz.jl.springbootfeatures.services.auth;
 
+import lombok.NonNull;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uz.jl.springbootfeatures.configs.security.UserDetails;
 import uz.jl.springbootfeatures.domains.auth.AuthUser;
 import uz.jl.springbootfeatures.dto.auth.request.LoginRequest;
+import uz.jl.springbootfeatures.dto.auth.request.RefreshTokenRequest;
 import uz.jl.springbootfeatures.dto.auth.response.JwtResponse;
 import uz.jl.springbootfeatures.enums.TokenType;
 import uz.jl.springbootfeatures.repository.AuthUserRepository;
@@ -50,7 +52,14 @@ public class AuthUserService implements UserDetailsService {
         return new JwtResponse(accessToken, refreshToken, "Bearer");
     }
 
-    public JwtResponse refreshToken(LoginRequest request) {
-        return null;
+    public JwtResponse refreshToken(@NonNull RefreshTokenRequest request) {
+        String token = request.token();
+        if (jwtUtils.isTokenValid(token)) {
+            throw new RuntimeException("Token invalid");
+        }
+        String subject = jwtUtils.getSubject(token);
+        UserDetails userDetails = loadUserByUsername(subject);
+        String accessToken = jwtUtils.getToken(userDetails, TokenType.ACCESS);
+        return new JwtResponse(accessToken, request.token(), "Bearer");
     }
 }

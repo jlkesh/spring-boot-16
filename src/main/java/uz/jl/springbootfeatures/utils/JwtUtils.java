@@ -28,7 +28,10 @@ public class JwtUtils {
 
 
     public String getToken(@NonNull final Authentication authentication, @NonNull final TokenType tokenType) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return getToken((UserDetails) authentication.getPrincipal(), tokenType);
+    }
+
+    public String getToken(@NonNull final UserDetails userDetails, @NonNull final TokenType tokenType) {
         if (TokenType.ACCESS.equals(tokenType)) {
             Set<String> roles = new HashSet<>();
             Set<String> permissions = new HashSet<>();
@@ -62,7 +65,7 @@ public class JwtUtils {
         return getClaim(authToken, Claims::getSubject);
     }
 
-    private <T> T getClaim(String token, Function<Claims, T> func) {
+    public <T> T getClaim(String token, Function<Claims, T> func) {
         Jws<Claims> claimsJws = jwtClaims(token);
         Claims claims = claimsJws.getBody();
         return func.apply(claims);
