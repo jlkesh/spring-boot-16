@@ -11,6 +11,7 @@ import uz.jl.springbootfeatures.configs.security.UserDetails;
 import uz.jl.springbootfeatures.domains.auth.AuthUser;
 import uz.jl.springbootfeatures.dto.auth.request.LoginRequest;
 import uz.jl.springbootfeatures.dto.auth.response.JwtResponse;
+import uz.jl.springbootfeatures.enums.TokenType;
 import uz.jl.springbootfeatures.repository.AuthUserRepository;
 import uz.jl.springbootfeatures.utils.JwtUtils;
 
@@ -44,8 +45,8 @@ public class AuthUserService implements UserDetailsService {
 
     public JwtResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.password()));
-        String accessToken = jwtUtils.generateJwtAccessToken(authentication);
-        String refreshToken = jwtUtils.generateJwtRefreshToken(authentication);
+        String accessToken = jwtUtils.getToken(authentication, TokenType.ACCESS);
+        String refreshToken = jwtUtils.getToken(authentication, TokenType.REFRESH);
         return new JwtResponse(accessToken, refreshToken, "Bearer");
     }
 
