@@ -2,6 +2,9 @@ package uz.jl.springbootfeatures.configs.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,7 +29,7 @@ import uz.jl.springbootfeatures.utils.JwtUtils;
 public class SecurityConfigurer {
     private final JwtUtils jwtUtils;
     private final AuthUserService authUserService;
-    private final CustomAuthEntryPoint customAuthEntryPoint;
+    private final AuthEntryPoint authEntryPoint;
 
 
     @Bean
@@ -39,7 +42,13 @@ public class SecurityConfigurer {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .addFilterBefore(new JwtFilter(jwtUtils, authUserService), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling().authenticationEntryPoint(customAuthEntryPoint);
+                .exceptionHandling().authenticationEntryPoint(authEntryPoint);
         return http.build();
+    }
+
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

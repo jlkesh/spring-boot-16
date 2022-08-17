@@ -53,6 +53,12 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateJwtRefreshToken(Authentication authentication) {
+        return getJwtBuilder((UserDetails) authentication.getPrincipal())
+                .setExpiration(new Date(System.currentTimeMillis() + 10 * 86_400_000))
+                .compact();
+    }
+
 
     public boolean validateJwtToken(String authToken) {
         try {

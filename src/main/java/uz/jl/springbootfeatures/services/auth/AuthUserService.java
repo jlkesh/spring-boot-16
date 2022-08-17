@@ -1,10 +1,11 @@
 package uz.jl.springbootfeatures.services.auth;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.jl.springbootfeatures.configs.security.UserDetails;
 import uz.jl.springbootfeatures.domains.auth.AuthUser;
@@ -22,11 +23,16 @@ import java.util.function.Supplier;
  */
 
 @Service
-@RequiredArgsConstructor
 public class AuthUserService implements UserDetailsService {
+    private final AuthenticationManager authenticationManager;
     private final AuthUserRepository authUserRepository;
     private final JwtUtils jwtUtils;
-    private final PasswordEncoder passwordEncoder;
+
+    public AuthUserService(@Lazy AuthenticationManager authenticationManager, AuthUserRepository authUserRepository, JwtUtils jwtUtils) {
+        this.authenticationManager = authenticationManager;
+        this.authUserRepository = authUserRepository;
+        this.jwtUtils = jwtUtils;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -37,12 +43,9 @@ public class AuthUserService implements UserDetailsService {
     }
 
     public JwtResponse login(LoginRequest request) {
-        UserDetails userDetails = loadUserByUsername(request.username());
-        if (!passwordEncoder.matches(request.password(), userDetails.getPassword())) {
-            throw new BadCredentialsException("Bad credentials");
-        }
-        String accessToken = jwtUtils.generateJwtAccessToken(userDetails);
-        String refreshToken = jwtUtils.generateJwtRefreshToken(userDetails);
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        String accessToken = jwtUtils.generateJwtAccessToken(authentication);
+        String refreshToken = jwtUtils.generateJwtRefreshToken(authentication);
         return new JwtResponse(accessToken, refreshToken, "Bearer");
     }
 

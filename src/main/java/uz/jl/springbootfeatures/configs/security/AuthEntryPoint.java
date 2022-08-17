@@ -25,10 +25,10 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
+public class AuthEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
-    private static final Logger logger = LoggerFactory.getLogger(CustomAuthEntryPoint.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthEntryPoint.class);
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
