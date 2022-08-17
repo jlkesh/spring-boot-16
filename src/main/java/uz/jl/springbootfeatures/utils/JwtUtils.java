@@ -35,18 +35,14 @@ public class JwtUtils {
         return jwt(userDetails.getUsername(), tokenType.getSecret(), tokenType.getAmountToAdd(), tokenType.getUnit());
     }
 
-    public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(TokenType.ACCESS.getSecret())
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-    }
-
     public boolean isTokenValid(String authToken) {
-        String subject = getClaim(authToken, Claims::getSubject);
+        String subject = getSubject(authToken);
         Date expiration = getClaim(authToken, Claims::getExpiration);
         return (Objects.nonNull(subject) && !isTokenExpired(expiration));
+    }
+
+    public String getSubject(String authToken) {
+        return getClaim(authToken, Claims::getSubject);
     }
 
     private <T> T getClaim(String token, Function<Claims, T> func) {
