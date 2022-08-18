@@ -1,158 +1,70 @@
 package uz.jl.springbootfeatures;
 
-import com.github.javafaker.Faker;
-import lombok.*;
-import org.springframework.boot.CommandLineRunner;
+import com.github.kshashov.telegram.api.MessageType;
+import com.github.kshashov.telegram.api.TelegramMvcController;
+import com.github.kshashov.telegram.api.TelegramRequest;
+import com.github.kshashov.telegram.api.bind.annotation.BotController;
+import com.github.kshashov.telegram.api.bind.annotation.BotPathVariable;
+import com.github.kshashov.telegram.api.bind.annotation.BotRequest;
+import com.github.kshashov.telegram.api.bind.annotation.request.MessageRequest;
+import com.pengrad.telegrambot.Callback;
+import com.pengrad.telegrambot.model.Chat;
+import com.pengrad.telegrambot.model.User;
+import com.pengrad.telegrambot.request.BaseRequest;
+import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.response.BaseResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
+import java.io.IOException;
 
+/**
+ * @author "Elmurodov Javohir"
+ * @since 18/08/22/12:09 (Thursday)
+ * spring-boot-features/IntelliJ IDEA
+ */
+@BotController
 @SpringBootApplication
-@EnableCaching
-public class SpringBootFeaturesApplication {
+public class SpringBootFeaturesApplication implements TelegramMvcController {
+
+    @Value("${bot.token}")
+    private String token;
+
+    @Override
+    public String getToken() {
+        return token;
+    }
+
+    @BotRequest(value = "/hello", type = {MessageType.CALLBACK_QUERY, MessageType.MESSAGE})
+    public BaseRequest hello(User user, Chat chat) {
+        return new SendMessage(chat.id(), "Hello, " + user.firstName() + "!");
+    }
+
+    @MessageRequest("/hello {name:[\\S]+}")
+    public String helloWithName(@BotPathVariable("name") String userName) {
+        // Return a string if you need to reply with a simple message
+        return "Hello, " + userName;
+    }
+
+    @MessageRequest("/helloCallback")
+    public String helloWithCustomCallback(TelegramRequest request, User user) {
+        request.setCallback(new Callback() {
+            @Override
+            public void onResponse(BaseRequest request, BaseResponse response) {
+                // TODO
+            }
+
+            @Override
+            public void onFailure(BaseRequest request, IOException e) {
+                // TODO
+            }
+        });
+        return "Hello, " + user.firstName() + "!";
+    }
+
     public static void main(String[] args) {
-        SpringApplication.run(SpringBootFeaturesApplication.class, args);
+        SpringApplication.run(SpringBootFeaturesApplication.class);
     }
-
-    //    @Bean
-    CommandLineRunner runner(BookRepository bookRepository) {
-        return (args) -> {
-            com.github.javafaker.Book book = new Faker().book();
-            List<Book> books = IntStream.rangeClosed(1, 1000).mapToObj(i -> Book.builder()
-                    .name(book.title())
-                    .author(book.author())
-                    .genre(book.genre())
-                    .build()).toList();
-            bookRepository.saveAll(books);
-        };
-    }
-
 }
 
-
-@Entity
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-class Book {
-    @Id
-    @Builder.Default
-    private String id = UUID.randomUUID().toString();
-    private String name;
-    private String author;
-    private String genre;
-    private LocalDateTime createdAt;
-}
-
-
-@Service
-@RequiredArgsConstructor
-class BookService {
-    private final BookRepository bookRepository;
-
-    public List<Book> getAll() {
-        return bookRepository.findAll();
-    }
-
-    @SneakyThrows
-    @Cacheable(cacheNames = "book", key = "#id")
-    public Book getOne(String id) {
-        // TODO: 13/08/22 some logic here that takes around 3 4 seconds
-        TimeUnit.SECONDS.sleep(2);
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found by id : %s".formatted(id)));
-    }
-
-    @CacheEvict(cacheNames = "book", key = "#id")
-    public void delete(String id) {
-        bookRepository.deleteById(id);
-    }
-
-    @CachePut(cacheNames = "book",key = "#dto.id")
-    public Book update(BookUpdateDTO dto) {
-        Book book = getOne(dto.getId());
-        if (dto.getName() != null)
-            book.setName(dto.getName());
-        if (dto.getAuthor() != null)
-            book.setAuthor(dto.getAuthor());
-        if (dto.getGenre() != null)
-            book.setGenre(dto.getGenre());
-        return bookRepository.save(book);
-    }
-
-    public void create(Book book) {
-        bookRepository.save(book);
-    }
-
-}
-
-
-interface BookRepository extends JpaRepository<Book, String> {
-}
-
-
-@RestController
-@RequestMapping("/book")
-@RequiredArgsConstructor
-class BookController {
-
-    private final BookService bookService;
-
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<Book> books() {
-        return bookService.getAll();
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void create(@RequestBody Book book) {
-        bookService.create(book);
-    }
-
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public Book getOne(@PathVariable String id) {
-        return bookService.getOne(id);
-    }
-
-    @PutMapping
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void update(@RequestBody BookUpdateDTO dto) {
-        bookService.update(dto);
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        bookService.delete(id);
-    }
-
-}
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-class BookUpdateDTO {
-    private String id;
-    private String name;
-    private String author;
-    private String genre;
-}
