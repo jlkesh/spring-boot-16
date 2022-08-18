@@ -3,6 +3,16 @@ package uz.jl.springbootfeatures;
 import com.github.javafaker.Faker;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Core;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.plugins.Plugin;
+import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
+import org.apache.logging.log4j.core.config.plugins.PluginElement;
+import org.apache.logging.log4j.core.config.plugins.PluginFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -153,3 +163,29 @@ class BookUpdateDTO {
     private String author;
     private String genre;
 }
+
+@Plugin(
+        name = "TelegramBotAppender",
+        category = Core.CATEGORY_NAME,
+        elementType = Appender.ELEMENT_TYPE)
+class TelegramBotAppender extends AbstractAppender {
+
+
+    protected TelegramBotAppender(String name, Filter filter) {
+        super(name, filter, PatternLayout.newBuilder().build(), true, null);
+    }
+
+
+    @PluginFactory
+    public static TelegramBotAppender createAppender(@PluginAttribute("name") String name, @PluginElement("Filter") Filter filter) {
+        return new TelegramBotAppender(name, filter);
+    }
+
+    @Override
+    public void append(LogEvent event) {
+        System.out.println("------------------------------------------------------------");
+        System.out.println(event.toString());
+        System.out.println("------------------------------------------------------------");
+    }
+}
+

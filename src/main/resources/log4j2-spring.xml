@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
     <Appenders>
+        <TelegramBotAppender name="TelegramBotAppender" />
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout
                     pattern="%style{%d{ISO8601}}{black} %highlight{%-5level }[%style{%t}{bright,blue}] %style{%C{1.}}{bright,yellow}: %msg%n%throwable" />
         </Console>
-
         <RollingFile name="RollingFile"
                      fileName="./logs/spring-boot-logger-log4j2.log"
                      filePattern="./logs/$${date:yyyy-MM}/spring-boot-logger-log4j2-%d{-dd-MMMM-yyyy}-%i.log.gz">
@@ -30,10 +30,16 @@
             <AppenderRef ref="RollingFile" />
         </Root>
 
-        <!-- LOG "com.baeldung*" at TRACE level -->
-        <Logger name="uz.jl.springbootfeatures" level="trace">
-
+        <Logger name="uz.jl.springbootfeatures" level="error">
+            <AppenderRef ref="TelegramBotAppender" />
         </Logger>
+
+        <!-- LOG "com.baeldung*" at TRACE level -->
+        <Logger name="uz.jl.springbootfeatures.BookController" level="trace">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="RollingFile" />
+        </Logger>
+
     </Loggers>
 
 </Configuration>
