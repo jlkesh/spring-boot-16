@@ -2,13 +2,10 @@ package uz.jl.springbootfeatures;
 
 import com.github.javafaker.Faker;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,11 +16,9 @@ import javax.persistence.Id;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 @SpringBootApplication
-@EnableCaching
 public class SpringBootFeaturesApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootFeaturesApplication.class, args);
@@ -62,31 +57,32 @@ class Book {
 
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 class BookService {
     private final BookRepository bookRepository;
+//    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public List<Book> getAll() {
+        log.info("Get All Method called");
         return bookRepository.findAll();
     }
 
-    @SneakyThrows
-    @Cacheable(cacheNames = "book", key = "#id")
+
     public Book getOne(String id) {
-        // TODO: 13/08/22 some logic here that takes around 3 4 seconds
-        TimeUnit.SECONDS.sleep(2);
+        log.info("Getting One Book by id : {} ", id);
         return bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found by id : %s".formatted(id)));
     }
 
-    @CacheEvict(cacheNames = "book", key = "#id")
     public void delete(String id) {
+        log.info("Deleting a book by id : {} ", id);
         bookRepository.deleteById(id);
     }
 
-    @CachePut(cacheNames = "book",key = "#dto.id")
     public Book update(BookUpdateDTO dto) {
         Book book = getOne(dto.getId());
+        log.info("Updating Book => {}\nwith => {} ", book, dto);
         if (dto.getName() != null)
             book.setName(dto.getName());
         if (dto.getAuthor() != null)
@@ -97,6 +93,7 @@ class BookService {
     }
 
     public void create(Book book) {
+        log.info("Creating Book with => {} ", book);
         bookRepository.save(book);
     }
 
