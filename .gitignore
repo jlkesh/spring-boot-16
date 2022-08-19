@@ -147,5 +147,6 @@ fabric.properties
 /mvnw.cmd
 /db.mv.db
 /scheduler.mv.db
+/scheduler.mv.db
 /src/main/java/uz/jl/springbootfeatures/config/security/SecurityConfigurer.java
 /my_path_for_test.patch

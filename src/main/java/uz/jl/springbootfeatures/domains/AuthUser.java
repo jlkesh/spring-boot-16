@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 /**
  * @author "Elmurodov Javohir"
@@ -42,7 +43,22 @@ public class AuthUser {
     @Enumerated(EnumType.STRING)
     private Status status = Status.NOT_ACTIVE;
 
+
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "auth_user_auth_role",
+            joinColumns = @JoinColumn(name = "auth_user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "auth_role_id", referencedColumnName = "id")
+    )
+    private Collection<AuthRole> roles;
+
+
     public enum Status {
         ACTIVE, NOT_ACTIVE, BLOCKED;
+    }
+
+
+    public boolean isActive() {
+        return Status.ACTIVE.equals(this.status);
     }
 }
