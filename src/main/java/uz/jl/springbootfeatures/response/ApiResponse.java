@@ -19,10 +19,17 @@ import java.io.Serializable;
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class ApiResponse<T> implements Serializable {
     private T body;
-    private final Integer status;
+    private Integer status;
     private Integer total;
-    private final boolean success;
+    private boolean success;
     private ApiErrorResponse error;
+
+    public ApiResponse() {
+    }
+
+    public ApiResponse(Integer statusCode) {
+        this.status = statusCode;
+    }
 
     public ApiResponse(T body) {
         this(body, 200, null);
@@ -42,6 +49,7 @@ public class ApiResponse<T> implements Serializable {
         this.status = status;
         this.total = total;
     }
+
 
     public ApiResponse(ApiErrorResponse error, @NonNull final HttpStatus status) {
         this(error, status.value());

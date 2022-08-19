@@ -1,6 +1,6 @@
 package uz.jl.springbootfeatures.config.security;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +16,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import uz.jl.springbootfeatures.config.security.jwt.JWTFilter;
 import uz.jl.springbootfeatures.services.AuthUserService;
-import uz.jl.springbootfeatures.utils.JWTUtils;
+import uz.jl.springbootfeatures.utils.jwt.TokenService;
 
 /**
  * @author "Elmurodov Javohir"
@@ -30,23 +30,38 @@ import uz.jl.springbootfeatures.utils.JWTUtils;
         securedEnabled = true,
         jsr250Enabled = true
 )
-@RequiredArgsConstructor
 public class SecurityConfigurer {
-    private final JWTUtils jwtUtils;
+
+
+    private final TokenService tokenService;
     private final AuthUserService authUserService;
     private final AuthEntryPoint authEntryPoint;
+
+    public SecurityConfigurer(@Qualifier("accessTokenService") TokenService tokenService,
+                              AuthUserService authUserService,
+                              AuthEntryPoint authEntryPoint) {
+        this.tokenService = tokenService;
+        this.authUserService = authUserService;
+        this.authEntryPoint = authEntryPoint;
+    }
 
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests(expressionInterceptUrlRegistry -> expressionInterceptUrlRegistry
-                        .antMatchers("/auth/login").permitAll()
+                        .antMatchers(
+                                "/auth/login",
+                                "/auth/register",
+                                "/swagger-ui/**",
+                                "/api-docs/**"
+
+                        ).permitAll()
                         .anyRequest().authenticated()
                 ).sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .addFilterBefore(new JWTFilter(jwtUtils, authUserService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JWTFilter(tokenService, authUserService), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling().authenticationEntryPoint(authEntryPoint);
         return http.build();
     }

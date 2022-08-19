@@ -1,21 +1,25 @@
 package uz.jl.springbootfeatures.services;
 
 import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.jl.springbootfeatures.config.security.UserDetails;
 import uz.jl.springbootfeatures.domains.AuthUser;
 import uz.jl.springbootfeatures.dtos.JwtResponse;
 import uz.jl.springbootfeatures.dtos.LoginRequest;
 import uz.jl.springbootfeatures.dtos.RefreshTokenRequest;
-import uz.jl.springbootfeatures.enums.TokenType;
+import uz.jl.springbootfeatures.dtos.UserRegisterDTO;
+import uz.jl.springbootfeatures.exceptions.GenericInvalidTokenException;
+import uz.jl.springbootfeatures.mappers.AuthUserMapper;
 import uz.jl.springbootfeatures.repository.AuthUserRepository;
-import uz.jl.springbootfeatures.utils.JWTUtils;
+import uz.jl.springbootfeatures.utils.jwt.TokenService;
 
 import java.util.function.Supplier;
 
@@ -29,12 +33,24 @@ import java.util.function.Supplier;
 public class AuthUserService implements UserDetailsService {
     private final AuthenticationManager authenticationManager;
     private final AuthUserRepository authUserRepository;
-    private final JWTUtils jwtUtils;
+    private final TokenService accessTokenService;
+    private final TokenService refreshTokenService;
+    private final AuthUserMapper authUserMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthUserService(@Lazy AuthenticationManager authenticationManager, AuthUserRepository authUserRepository, JWTUtils jwtUtils) {
+    public AuthUserService(@Lazy AuthenticationManager authenticationManager,
+                           AuthUserRepository authUserRepository,
+                           @Qualifier("accessTokenService") TokenService accessTokenService,
+                           @Qualifier("refreshTokenService") TokenService refreshTokenService,
+                           AuthUserMapper authUserMapper,
+                           PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.authUserRepository = authUserRepository;
-        this.jwtUtils = jwtUtils;
+        this.accessTokenService = accessTokenService;
+        this.refreshTokenService = refreshTokenService;
+        this.authUserMapper = authUserMapper;
+
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -47,24 +63,27 @@ public class AuthUserService implements UserDetailsService {
 
     public JwtResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.username(), request.password()));
-        String accessToken = jwtUtils.getToken(authentication, TokenType.ACCESS);
-        String refreshToken = jwtUtils.getToken(authentication, TokenType.REFRESH);
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String accessToken = accessTokenService.generateToken(userDetails);
+        String refreshToken = refreshTokenService.generateToken(userDetails);
         return new JwtResponse(accessToken, refreshToken, "Bearer");
     }
 
     public JwtResponse refreshToken(@NonNull RefreshTokenRequest request) {
         String token = request.token();
-        if (jwtUtils.isTokenValid(token)) {
-            throw new RuntimeException("Token invalid");
+        if (accessTokenService.isValid(token)) {
+            throw new GenericInvalidTokenException("Refresh Token invalid", 401);
         }
-        String subject = jwtUtils.getSubject(token);
+        String subject = accessTokenService.getSubject(token);
         UserDetails userDetails = loadUserByUsername(subject);
-        String accessToken = jwtUtils.getToken(userDetails, TokenType.ACCESS);
+        String accessToken = accessTokenService.generateToken(userDetails);
         return new JwtResponse(accessToken, request.token(), "Bearer");
     }
 
-    public Object register(Object o) {
-
-        return null;
+    public AuthUser register(UserRegisterDTO dto) {
+        AuthUser authUser = authUserMapper.fromRegisterDTO(dto);
+        authUser.setStatus(AuthUser.Status.ACTIVE);
+        authUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        return authUserRepository.save(authUser);
     }
 }

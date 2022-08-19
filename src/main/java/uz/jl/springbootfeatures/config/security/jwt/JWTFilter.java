@@ -1,20 +1,19 @@
 package uz.jl.springbootfeatures.config.security.jwt;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import uz.jl.springbootfeatures.config.security.UserDetails;
 import uz.jl.springbootfeatures.services.AuthUserService;
-import uz.jl.springbootfeatures.utils.JWTUtils;
+import uz.jl.springbootfeatures.utils.jwt.TokenService;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -24,28 +23,34 @@ import java.util.function.Function;
  * spring-boot-features/IntelliJ IDEA
  */
 public class JWTFilter extends OncePerRequestFilter {
-    private final JWTUtils jwtUtils;
+
+    private final static List<String> WHITE_LIST = List.of(
+            "/auth/login",
+            "/auth/register",
+            "/swagger-ui.*",
+            "/api-docs.*"
+    );
+
+    private final TokenService tokenService;
     private final AuthUserService authUserService;
 
-    public JWTFilter(JWTUtils jwtUtils, AuthUserService authUserService) {
-        this.jwtUtils = jwtUtils;
+
+    public JWTFilter(TokenService tokenService,
+                     AuthUserService authUserService) {
+        this.tokenService = tokenService;
         this.authUserService = authUserService;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (secureUrl.apply(request.getRequestURI())) {
+        if (!isOpenUrl.apply(request.getRequestURI())) {
             try {
                 String token = parseJwt(request);
-                if (jwtUtils.isTokenValid(token)) {
-                    String username = jwtUtils.getSubject(token);
-                    final List<String> authorityValues = new ArrayList<>();
-                    authorityValues.addAll(jwtUtils.getClaim(token, claims -> claims.get("roles", ArrayList.class)));
-                    authorityValues.addAll(jwtUtils.getClaim(token, claims -> claims.get("permissions", ArrayList.class)));
-                    List<SimpleGrantedAuthority> authorities = authorityValues.stream().map(SimpleGrantedAuthority::new).toList();
+                if (tokenService.isValid(token)) {
+                    String username = tokenService.getSubject(token);
+                    UserDetails userDetails = authUserService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            username, null, authorities);
+                            userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
@@ -63,10 +68,10 @@ public class JWTFilter extends OncePerRequestFilter {
             return headerAuth.substring(7);
         }
         return null;
+
     }
 
-    private final static Function<String, Boolean> secureUrl = (path) ->
-            !List.of("/auth/login", "/auth/refresh").contains(path);
+    private final static Function<String, Boolean> isOpenUrl = (url) -> WHITE_LIST.stream().anyMatch(url::matches);
 
 }
 
