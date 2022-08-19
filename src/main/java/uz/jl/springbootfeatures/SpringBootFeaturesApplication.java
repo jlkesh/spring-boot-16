@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.Entity;
@@ -116,7 +117,10 @@ class BookService {
 
     public void create(Book book) {
         bookRepository.save(book);
-        publisher.publishEvent(new BookCreateEvent(book.getId(), book.getName(), book.getAuthor()));
+        publisher.publishEvent(new BookCreateEvent(
+                book.getId(),
+                book.getName(),
+                book.getAuthor()));
     }
 
 
@@ -193,11 +197,31 @@ class BookCreateEvent {
 @Component
 class BookEventHandler {
 
-    @EventListener
+    @EventListener(condition = "#bookCreateEvent.success")
     @SneakyThrows
-    public void createBookListener(BookCreateEvent bookCreateEvent) {
+    public void createBookListener(GenericSpringEvent<BookCreateEvent> bookCreateEvent) {
         TimeUnit.SECONDS.sleep(2);
-        System.out.println("CREATING..............." + bookCreateEvent);
+        System.out.println("CREATING..............." + bookCreateEvent.getWhat());
     }
 
+    @EventListener(condition = "!#bookCreateEvent.success ")
+    @SneakyThrows
+    public void blahblah(GenericSpringEvent<BookCreateEvent> bookCreateEvent) {
+        TimeUnit.SECONDS.sleep(2);
+        System.out.println("CREATING..............." + bookCreateEvent.getWhat());
+    }
+
+}
+
+@Getter
+@Setter
+class GenericSpringEvent<T> {
+    private T what;
+    protected boolean success;
+
+    public GenericSpringEvent(T what, boolean success) {
+        this.what = what;
+        this.success = success;
+    }
+    // ... standard getters
 }
