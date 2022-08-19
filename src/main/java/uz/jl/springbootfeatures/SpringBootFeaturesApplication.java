@@ -9,8 +9,15 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.ApplicationEventMulticaster;
+import org.springframework.context.event.EventListener;
+import org.springframework.context.event.SimpleApplicationEventMulticaster;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +34,15 @@ import java.util.stream.IntStream;
 public class SpringBootFeaturesApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootFeaturesApplication.class, args);
+    }
+
+    @Bean(name = "applicationEventMulticaster")
+    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
+        SimpleApplicationEventMulticaster eventMulticaster = new SimpleApplicationEventMulticaster();
+        SimpleAsyncTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
+        taskExecutor.setConcurrencyLimit(20);
+        eventMulticaster.setTaskExecutor(taskExecutor);
+        return eventMulticaster;
     }
 
     //    @Bean
@@ -65,6 +81,8 @@ class Book {
 @RequiredArgsConstructor
 class BookService {
     private final BookRepository bookRepository;
+    private final ApplicationEventPublisher publisher;
+
 
     public List<Book> getAll() {
         return bookRepository.findAll();
@@ -84,7 +102,7 @@ class BookService {
         bookRepository.deleteById(id);
     }
 
-    @CachePut(cacheNames = "book",key = "#dto.id")
+    @CachePut(cacheNames = "book", key = "#dto.id")
     public Book update(BookUpdateDTO dto) {
         Book book = getOne(dto.getId());
         if (dto.getName() != null)
@@ -98,7 +116,9 @@ class BookService {
 
     public void create(Book book) {
         bookRepository.save(book);
+        publisher.publishEvent(new BookCreateEvent(book.getId(), book.getName(), book.getAuthor()));
     }
+
 
 }
 
@@ -155,4 +175,29 @@ class BookUpdateDTO {
     private String name;
     private String author;
     private String genre;
+}
+
+
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+class BookCreateEvent {
+    private String id;
+    private String title;
+    private String author;
+}
+
+
+@Component
+class BookEventHandler {
+
+    @EventListener
+    @SneakyThrows
+    public void createBookListener(BookCreateEvent bookCreateEvent) {
+        TimeUnit.SECONDS.sleep(2);
+        System.out.println("CREATING..............." + bookCreateEvent);
+    }
+
 }
