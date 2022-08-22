@@ -1,9 +1,6 @@
 package uz.jl.springbootfeatures.controller.auth;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import uz.jl.springbootfeatures.controller.ApiController;
 import uz.jl.springbootfeatures.domains.AuthUser;
 import uz.jl.springbootfeatures.dtos.JwtResponse;
@@ -41,6 +38,11 @@ public class AuthUserController extends ApiController<AuthUserService> {
     @PostMapping(PATH + "/auth/register")
     public ApiResponse<AuthUser> register(@Valid @RequestBody UserRegisterDTO dto) {
         return new ApiResponse<>(service.register(dto));
+    }
+
+    @GetMapping(PATH + "/auth/activate")
+    public ApiResponse<Boolean> register(@RequestParam(name = "activation_code") String activationCode) {
+        return new ApiResponse<>(service.activateUser(activationCode));
     }
 
     @GetMapping(PATH + "/auth/me")

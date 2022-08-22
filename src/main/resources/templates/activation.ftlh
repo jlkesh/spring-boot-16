@@ -91,9 +91,6 @@
 
 <div class="activation__wrapper">
     <div class="activation__container">
-        <div class="activation__header">
-            <img class="activation__logo" src="img.png" />
-        </div>
         <div class="activation__subject">Dummies Activation Link</div>
         <div class="activation__arrow"></div>
         <div class="activation__message">
@@ -105,7 +102,7 @@
             <div>
                 Click on the following link to activate your account:
             </div>
-            <a href="${activation_link}" class="activation__btn">Activate your account here</a>
+            <a href="${activation_link}" target="_blank" class="activation__btn">Activate your account here</a>
         </div>
         <div class="activation__footer">
             Thank you. Sincerely,
