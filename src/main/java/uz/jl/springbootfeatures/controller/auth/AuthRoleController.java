@@ -1,8 +1,7 @@
 package uz.jl.springbootfeatures.controller.auth;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import uz.jl.springbootfeatures.controller.ApiController;
 import uz.jl.springbootfeatures.dtos.auth.AuthRoleCreateDTO;
 import uz.jl.springbootfeatures.dtos.auth.AuthRoleDTO;
 import uz.jl.springbootfeatures.response.ApiResponse;
@@ -17,36 +16,33 @@ import java.util.List;
  * spring-boot-features/IntelliJ IDEA
  */
 @RestController
-@RequiredArgsConstructor
-@RequestMapping("/auth/role")
-public class AuthRoleController {
+public class AuthRoleController extends ApiController<AuthRoleService> {
 
-    private final AuthRoleService authRoleService;
 
-    @GetMapping
-    @PreAuthorize("hasAuthority(T(uz.jl.springbootfeatures.enums.Permissions).ROLE_READ)")
+    protected AuthRoleController(AuthRoleService service) {
+        super(service);
+    }
+
+    @GetMapping(PATH + "/role")
     public ApiResponse<List<AuthRoleDTO>> getAll() {
-        return new ApiResponse<>(authRoleService.getAll());
+        return new ApiResponse<>(service.getAll());
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority(T(uz.jl.springbootfeatures.enums.Permissions).ROLE_READ)")
+    @GetMapping(PATH + "/role/{id}")
     public ApiResponse<AuthRoleDTO> get(@PathVariable Long id) {
-        return new ApiResponse<>(authRoleService.get(id));
+        return new ApiResponse<>(service.get(id));
     }
 
-    @PostMapping
-    @PreAuthorize("hasAuthority(T(uz.jl.springbootfeatures.enums.Permissions).ROLE_CREATE)")
+    @PostMapping(PATH + "/role")
     public ApiResponse<Void> create(@Valid @RequestBody AuthRoleCreateDTO dto) {
-        authRoleService.create(dto);
+        service.create(dto);
         // TODO: 19/08/22 standardize status codes
         return new ApiResponse<>(201);
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority(T(uz.jl.springbootfeatures.enums.Permissions).ROLE_DELETE)")
+    @DeleteMapping(PATH + "/role/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
-        authRoleService.delete(id);
+        service.delete(id);
         // TODO: 19/08/22 standardize status codes
         return new ApiResponse<>(204);
     }

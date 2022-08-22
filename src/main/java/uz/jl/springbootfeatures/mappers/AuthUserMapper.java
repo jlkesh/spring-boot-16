@@ -3,6 +3,7 @@ package uz.jl.springbootfeatures.mappers;
 import org.mapstruct.Mapper;
 import uz.jl.springbootfeatures.domains.AuthUser;
 import uz.jl.springbootfeatures.dtos.UserRegisterDTO;
+import uz.jl.springbootfeatures.dtos.auth.AuthUserDTO;
 
 /**
  * @author "Elmurodov Javohir"
@@ -13,4 +14,6 @@ import uz.jl.springbootfeatures.dtos.UserRegisterDTO;
 @Mapper(componentModel = "spring")
 public interface AuthUserMapper {
     AuthUser fromRegisterDTO(UserRegisterDTO dto);
+
+    AuthUserDTO toDTO(AuthUser domain);
 }

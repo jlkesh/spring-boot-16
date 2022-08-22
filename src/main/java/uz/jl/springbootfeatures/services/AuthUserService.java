@@ -16,9 +16,11 @@ import uz.jl.springbootfeatures.dtos.JwtResponse;
 import uz.jl.springbootfeatures.dtos.LoginRequest;
 import uz.jl.springbootfeatures.dtos.RefreshTokenRequest;
 import uz.jl.springbootfeatures.dtos.UserRegisterDTO;
+import uz.jl.springbootfeatures.dtos.auth.AuthUserDTO;
 import uz.jl.springbootfeatures.exceptions.GenericInvalidTokenException;
 import uz.jl.springbootfeatures.mappers.AuthUserMapper;
 import uz.jl.springbootfeatures.repository.AuthUserRepository;
+import uz.jl.springbootfeatures.services.mail.MailService;
 import uz.jl.springbootfeatures.utils.jwt.TokenService;
 
 import java.util.function.Supplier;
@@ -37,13 +39,14 @@ public class AuthUserService implements UserDetailsService {
     private final TokenService refreshTokenService;
     private final AuthUserMapper authUserMapper;
     private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
     public AuthUserService(@Lazy AuthenticationManager authenticationManager,
                            AuthUserRepository authUserRepository,
                            @Qualifier("accessTokenService") TokenService accessTokenService,
                            @Qualifier("refreshTokenService") TokenService refreshTokenService,
                            AuthUserMapper authUserMapper,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, MailService mailService) {
         this.authenticationManager = authenticationManager;
         this.authUserRepository = authUserRepository;
         this.accessTokenService = accessTokenService;
@@ -51,6 +54,7 @@ public class AuthUserService implements UserDetailsService {
         this.authUserMapper = authUserMapper;
 
         this.passwordEncoder = passwordEncoder;
+        this.mailService = mailService;
     }
 
     @Override
@@ -81,9 +85,11 @@ public class AuthUserService implements UserDetailsService {
     }
 
     public AuthUser register(UserRegisterDTO dto) {
+        dto.setPassword(passwordEncoder.encode(dto.getPassword()));
         AuthUser authUser = authUserMapper.fromRegisterDTO(dto);
-        authUser.setStatus(AuthUser.Status.ACTIVE);
-        authUser.setPassword(passwordEncoder.encode(dto.getPassword()));
-        return authUserRepository.save(authUser);
+        authUserRepository.save(authUser);
+        AuthUserDTO authUserDTO = authUserMapper.toDTO(authUser);
+        mailService.sendEmail(authUserDTO,);
+
     }
 }

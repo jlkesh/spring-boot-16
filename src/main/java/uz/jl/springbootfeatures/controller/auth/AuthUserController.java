@@ -1,7 +1,10 @@
 package uz.jl.springbootfeatures.controller.auth;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import uz.jl.springbootfeatures.controller.ApiController;
 import uz.jl.springbootfeatures.domains.AuthUser;
 import uz.jl.springbootfeatures.dtos.JwtResponse;
 import uz.jl.springbootfeatures.dtos.LoginRequest;
@@ -9,6 +12,8 @@ import uz.jl.springbootfeatures.dtos.RefreshTokenRequest;
 import uz.jl.springbootfeatures.dtos.UserRegisterDTO;
 import uz.jl.springbootfeatures.response.ApiResponse;
 import uz.jl.springbootfeatures.services.AuthUserService;
+
+import javax.validation.Valid;
 
 
 /**
@@ -18,29 +23,27 @@ import uz.jl.springbootfeatures.services.AuthUserService;
  */
 
 @RestController
-@RequestMapping("/auth")
-@RequiredArgsConstructor
-public class AuthUserController {
+public class AuthUserController extends ApiController<AuthUserService> {
+    protected AuthUserController(AuthUserService service) {
+        super(service);
+    }
 
-    private final AuthUserService authUserService;
-
-
-    @PostMapping(value = "/login", produces = "application/json")
+    @PostMapping(value = PATH + "/auth/login", produces = "application/json")
     public ApiResponse<JwtResponse> login(@RequestBody LoginRequest loginRequest) {
-        return new ApiResponse<>(authUserService.login(loginRequest));
+        return new ApiResponse<>(service.login(loginRequest));
     }
 
-    @GetMapping(value = "/refresh", produces = "application/json")
+    @GetMapping(value = PATH + "/auth/refresh", produces = "application/json")
     public ApiResponse<JwtResponse> login(@RequestBody RefreshTokenRequest refreshTokenRequest) {
-        return new ApiResponse<>(authUserService.refreshToken(refreshTokenRequest));
+        return new ApiResponse<>(service.refreshToken(refreshTokenRequest));
     }
 
-    @PostMapping("/register")
-    public ApiResponse<AuthUser> register(@RequestBody UserRegisterDTO dto) {
-        return new ApiResponse<>(authUserService.register(dto));
+    @PostMapping(PATH + "/auth/register")
+    public ApiResponse<AuthUser> register(@Valid @RequestBody UserRegisterDTO dto) {
+        return new ApiResponse<>(service.register(dto));
     }
 
-    @GetMapping("/me")
+    @GetMapping(PATH + "/auth/me")
     public AuthUser me() {
         return null;
     }

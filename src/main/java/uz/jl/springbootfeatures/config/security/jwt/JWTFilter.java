@@ -14,8 +14,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
 import java.util.function.Function;
+
+import static uz.jl.springbootfeatures.config.security.SecurityConstants.WHITE_LIST;
 
 /**
  * @author "Elmurodov Javohir"
@@ -23,13 +25,6 @@ import java.util.function.Function;
  * spring-boot-features/IntelliJ IDEA
  */
 public class JWTFilter extends OncePerRequestFilter {
-
-    private final static List<String> WHITE_LIST = List.of(
-            "/auth/login",
-            "/auth/register",
-            "/swagger-ui.*",
-            "/api-docs.*"
-    );
 
     private final TokenService tokenService;
     private final AuthUserService authUserService;
@@ -71,7 +66,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
     }
 
-    private final static Function<String, Boolean> isOpenUrl = (url) -> WHITE_LIST.stream().anyMatch(url::matches);
+    private final static Function<String, Boolean> isOpenUrl = (url) -> Arrays.stream(WHITE_LIST).anyMatch(s -> s.startsWith(url));
 
 }
 

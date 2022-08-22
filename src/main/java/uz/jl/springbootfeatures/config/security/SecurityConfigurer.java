@@ -18,6 +18,8 @@ import uz.jl.springbootfeatures.config.security.jwt.JWTFilter;
 import uz.jl.springbootfeatures.services.AuthUserService;
 import uz.jl.springbootfeatures.utils.jwt.TokenService;
 
+import static uz.jl.springbootfeatures.config.security.SecurityConstants.WHITE_LIST;
+
 /**
  * @author "Elmurodov Javohir"
  * @since 19/08/22/11:51 (Friday)
@@ -31,7 +33,6 @@ import uz.jl.springbootfeatures.utils.jwt.TokenService;
         jsr250Enabled = true
 )
 public class SecurityConfigurer {
-
 
     private final TokenService tokenService;
     private final AuthUserService authUserService;
@@ -50,13 +51,7 @@ public class SecurityConfigurer {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests(expressionInterceptUrlRegistry -> expressionInterceptUrlRegistry
-                        .antMatchers(
-                                "/auth/login",
-                                "/auth/register",
-                                "/swagger-ui/**",
-                                "/api-docs/**"
-
-                        ).permitAll()
+                        .antMatchers(WHITE_LIST).permitAll()
                         .anyRequest().authenticated()
                 ).sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
