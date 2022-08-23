@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Page</title>
+    <style>
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+<div th:if="${message}">
+    <p class="success" th:text="${message}"></p>
+</div>
+<div th:if="${error}">
+    <p class="error" th:text="${error}"></p>
+</div>
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <button type="submit">Upload</button>
+</form>
+</body>
+</html>
