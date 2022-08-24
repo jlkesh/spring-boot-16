@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.core.MessageSendingOperations;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class SpringBootFeaturesApplication {
 
-    private final MessageSendingOperations<String> messageTemplate;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     public static void main(String[] args) {
         SpringApplication.run(SpringBootFeaturesApplication.class, args);
@@ -41,7 +41,7 @@ public class SpringBootFeaturesApplication {
         String time = new SimpleDateFormat("HH:mm").format(new Date());
 
         OutputMessage message = new OutputMessage(name, "Raise message", time);
-        messageTemplate.convertAndSend("/topic/messages", message);
+        simpMessagingTemplate.convertAndSend("/topic/messages", message);
         return name;
     }
 
