@@ -145,3 +145,4 @@ fabric.properties
 /.mvn/wrapper/maven-wrapper.properties
 /mvnw
 /mvnw.cmd
+/src/main/resources/pdpb16.p12
