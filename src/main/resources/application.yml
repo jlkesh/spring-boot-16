@@ -1,0 +1,24 @@
+
+spring:
+  application:
+    name: trello
+  datasource:
+    url: jdbc:postgresql://localhost:5432/b16_1?currentSchema=spring_migration
+    username: postgres
+    password: 123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 60
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  flyway:
+    schemas: spring-migration
+#  spring.flyway.create-schemas=true
+#  spring.flyway.table=history
