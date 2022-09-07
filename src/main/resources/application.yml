@@ -20,5 +20,6 @@ spring:
     show-sql: true
   flyway:
     schemas: spring-migration
+#    default-schema: spring-migration
 #  spring.flyway.create-schemas=true
 #  spring.flyway.table=history
