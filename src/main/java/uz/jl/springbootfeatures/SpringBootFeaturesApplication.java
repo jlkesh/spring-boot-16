@@ -3,13 +3,14 @@ package uz.jl.springbootfeatures;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.Server;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.redis.core.RedisHash;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.Entity;
@@ -34,6 +35,8 @@ public class SpringBootFeaturesApplication {
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@CacheConfig(cacheNames = "book")
+@RedisHash(value = "book", timeToLive = 2)
 class BookController {
     final BookRepository repository;
 
@@ -44,7 +47,7 @@ class BookController {
     }
 
     @GetMapping("/{id}")
-    @Cacheable(cacheNames = "book", key = "#id")
+    @Cacheable(key = "#id")
     public Book getAll(@PathVariable String id) {
         log.info("GET ONE BOOK api called");
         Supplier<RuntimeException> supplier = () -> new RuntimeException("Book not found");
